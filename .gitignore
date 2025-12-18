@@ -1,0 +1,50 @@
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Test / coverage artifacts
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.cache/
+
+# Type checker / linter caches
+.mypy_cache/
+.ruff_cache/
+.pytype/
+
+# Local environment files (secrets)
+.env
+.env.*
+.env.test
+!.env.example
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Terraform (state is local-only)
+infra/terraform/.terraform/
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/crash.log
+infra/terraform/crash.*.log
+
+# Misc
+*.log
+
+# Local model caches
+models/
+
+AGENTS.md

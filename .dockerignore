@@ -1,0 +1,69 @@
+.git
+.gitignore
+.cursor
+.DS_Store
+
+# Python caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local env / venv
+.env
+.env.*
+.venv/
+venv/
+
+# Terraform / infra (not needed in runtime image)
+infra/
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Tests / docs / examples (not needed in runtime image)
+tests/
+data/
+*.md
+
+# Local build artifacts
+dist/
+build/
+# Keep Docker build context small and deterministic.
+
+# VCS
+.git/
+
+# Virtual env / caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+htmlcov/
+.coverage
+
+# Local env (secrets)
+.env
+.env.*
+!.env.example
+
+# Terraform (not needed in image)
+infra/
+
+# Docs/data/tests not needed for Lambda runtime image
+tests/
+data/
+*.md
+
+# OS/editor
+.DS_Store
+.idea/
+.vscode/
+
+
