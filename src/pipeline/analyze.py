@@ -125,15 +125,11 @@ class RequestAnalyzer:
         #   - raw_items: List[SentenceItem], each containing {text: str, comment_id: str, source: str}
         #     Example: [SentenceItem(text="Withholding my money", comment_id="uuid-123", source="baseline"), ...]
         raw_items: List[SentenceItem] = []
-        raw_comment_ids: List[str] = []
-        raw_sources: List[str] = []
         for s in req.baseline:
             t = normalize_text(s.sentence)
             if not t:
                 continue
             raw_items.append(SentenceItem(text=t, comment_id=s.id, source="baseline"))
-            raw_comment_ids.append(s.id)
-            raw_sources.append("baseline")
 
         if req.comparison:
             for s in req.comparison:
@@ -141,8 +137,6 @@ class RequestAnalyzer:
                 if not t:
                     continue
                 raw_items.append(SentenceItem(text=t, comment_id=s.id, source="comparison"))
-                raw_comment_ids.append(s.id)
-                raw_sources.append("comparison")
 
         if not raw_items:
             raise RuntimeError("No valid sentences after normalization")

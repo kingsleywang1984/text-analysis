@@ -23,6 +23,39 @@ class SentimentEngine:
 
     @staticmethod
     def cluster_sentiment(compounds: List[float], config: AppConfig) -> SentimentLabel:
+        """
+        Aggregate sentence-level sentiment compound scores into cluster-level sentiment label.
+        
+        Purpose: Convert a list of sentence-level VADER compound scores (ranging from -1.0 to 1.0)
+        into a single categorical sentiment label for the entire cluster using majority voting
+        with priority rules for strong negative sentiment.
+        
+        Input Format:
+          - compounds: List[float], VADER compound scores from all sentences in the cluster
+            Example: [-0.6249, 0.2263, -0.2960, 0.0]
+          - config: AppConfig, contains sentiment threshold configuration:
+            - sentiment_strong_negative_threshold: float, threshold for strong negative sentiment
+            - sentiment_positive_threshold: float, threshold for positive sentiment
+            - sentiment_negative_threshold: float, threshold for negative sentiment
+        
+        Processing Logic:
+          1. If compounds list is empty: return "neutral" (default for empty clusters)
+          2. Strong negative priority check:
+             - If any sentence has compound < sentiment_strong_negative_threshold:
+               immediately return "negative" (strong negative sentiment overrides majority voting)
+          3. Count positive and negative sentences:
+             - Positive count: number of sentences with compound > sentiment_positive_threshold
+             - Negative count: number of sentences with compound < sentiment_negative_threshold
+             - Sentences falling between thresholds are not counted in either category
+          4. Majority voting with minimum threshold:
+             - If positive_count > negative_count AND positive_count >= 1: return "positive"
+             - If negative_count > positive_count AND negative_count >= 1: return "negative"
+             - Otherwise (tie, or all sentences in neutral range): return "neutral"
+        
+        Output Format:
+          - SentimentLabel: Literal["positive", "neutral", "negative"]
+            Example: "negative" (when cluster contains strong negative sentiment or majority negative)
+        """
         if not compounds:
             return "neutral"
 

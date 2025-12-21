@@ -5,7 +5,7 @@ from src.handler import lambda_handler
 
 def _set_min_env(monkeypatch):
     # Minimal set required by load_config()
-    monkeypatch.setenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+    monkeypatch.setenv("EMBEDDING_MODEL", "tfidf")
     monkeypatch.setenv("CLUSTER_SIMILARITY_THRESHOLD", "0.75")
     monkeypatch.setenv("CLUSTER_MAX_CLUSTERS", "10")
     monkeypatch.setenv("CLUSTER_OVERFLOW_STRATEGY", "OTHER")
