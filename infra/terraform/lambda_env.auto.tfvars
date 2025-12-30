@@ -42,7 +42,7 @@ lambda_env = {
   # - LLM_API_KEY
   # - LLM_MODEL
   LLM_PROVIDER = "none"
-  LLM_BASE_URL = "https://openrouter.ai/api/v1"
+  LLM_BASE_URL = "https://openrouter.ai/api"
   LLM_API_KEY  = "<place openrouter api key here>"
   LLM_MODEL    = "openai/gpt-oss-20b:free"
 

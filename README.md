@@ -47,45 +47,50 @@ uv sync
 
 ### Configuration
 
-Create a `.env` file in the project root with required configuration:
+The application loads configuration from environment variables (see `src/config.py`).
+
+Recommended workflow:
+- Copy `.env.example` to `.env`
+- Edit `.env` values for your local environment
+
+> Note: `*_BASE_URL` values should **NOT** include a trailing `/v1` — the app appends `/v1/...` itself.
 
 ```bash
-# Embedding Configuration
-EMBEDDING_PROVIDER=tfidf  # or "openai"
+# For the full, commented reference config, see `.env.example`.
+# Below is the MINIMAL configuration required to pass `src/config.py` validation.
+# All other variables are optional or have defaults; see `.env.example` for details.
+
+# Required (always)
 EMBEDDING_MODEL=tfidf
-EMBEDDING_API_BASE_URL=https://api.openai.com  # Required if provider=openai
-EMBEDDING_API_KEY=your-key  # Required if provider=openai
-EMBEDDING_API_TIMEOUT_SECONDS=30.0
-EMBEDDING_API_BATCH_SIZE=256
-
-# Clustering Configuration
-CLUSTER_SIMILARITY_THRESHOLD=0.7
+CLUSTER_SIMILARITY_THRESHOLD=0.55
 CLUSTER_MAX_CLUSTERS=10
-CLUSTER_OVERFLOW_STRATEGY=OTHER  # or "DROP"
-
-# Sentiment Configuration
 SENTIMENT_STRONG_NEGATIVE_THRESHOLD=-0.5
-SENTIMENT_POSITIVE_THRESHOLD=0.05
-SENTIMENT_NEGATIVE_THRESHOLD=-0.05
+SENTIMENT_POSITIVE_THRESHOLD=0.3
+SENTIMENT_NEGATIVE_THRESHOLD=-0.2
 
-# LLM Configuration (Optional)
-LLM_PROVIDER=none  # or "openai_compatible"
-LLM_BASE_URL=https://api.openai.com  # Required if provider != none
-LLM_API_KEY=your-key  # Required if provider != none
-LLM_MODEL=gpt-4o-mini  # Required if provider != none
-LLM_TIMEOUT_SECONDS=30.0
-LLM_TEMPERATURE=0.7
-LLM_MAX_RETRIES=2
-LLM_MAX_CLUSTERS=10
-LLM_REPRESENTATIVE_SENTENCES_PER_CLUSTER=10
-
-# LLM Output Limits
+# Required budgets (always)
 CLUSTER_INSIGHTS_MIN=2
 CLUSTER_INSIGHTS_MAX=3
 COMPARISON_SIMILARITIES_MIN=1
 COMPARISON_SIMILARITIES_MAX=3
 COMPARISON_DIFFERENCES_MIN=1
 COMPARISON_DIFFERENCES_MAX=3
+
+# LLM toggles (always required by config loader; provider can still be disabled)
+LLM_PROVIDER=none
+LLM_TIMEOUT_SECONDS=8
+LLM_TEMPERATURE=0.2
+LLM_MAX_RETRIES=1
+
+# If you enable a real LLM (LLM_PROVIDER=openai_compatible), you must also set:
+# LLM_BASE_URL=https://openrouter.ai/api
+# LLM_API_KEY=your-key
+# LLM_MODEL=openai/gpt-4o-mini
+
+# If you enable OpenAI embeddings (EMBEDDING_PROVIDER=openai), you must also set:
+# EMBEDDING_PROVIDER=openai
+# EMBEDDING_API_BASE_URL=https://api.openai.com
+# EMBEDDING_API_KEY=your-key
 ```
 
 ### Running Locally

@@ -45,6 +45,10 @@ infra/terraform/crash.*.log
 *.log
 
 # Local model caches
-models/
+/models/
+!src/models/
+!src/models/**
+src/models/**/__pycache__/
+src/models/**/*.py[cod]
 
 AGENTS.md
