@@ -43,7 +43,7 @@ lambda_env = {
   # - LLM_MODEL
   LLM_PROVIDER = "openai_compatible"
   LLM_BASE_URL = "https://openrouter.ai/api"
-  LLM_API_KEY  = "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"
+  LLM_API_KEY  = "<replace with your own ones>"
   LLM_MODEL    = "openai/gpt-oss-120b:free"
 
   # LLM runtime tuning (required by src/config.py regardless of provider)
