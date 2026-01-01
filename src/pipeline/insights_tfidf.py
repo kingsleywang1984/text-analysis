@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Sequence
+from typing import Any, List, Sequence, cast
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 
@@ -23,7 +23,8 @@ def _top_terms_tfidf(texts: Sequence[str], *, top_k: int) -> List[str]:
         ngram_range=(1, 2),
         max_features=5000,
     )
-    X = vec.fit_transform(list(texts))
+    # sklearn typing can be incomplete; we rely on `.shape`/`.mean(...).A1` which exist on sparse matrices.
+    X = cast(Any, vec.fit_transform(list(texts)))
     if X.shape[1] == 0:
         return []
 

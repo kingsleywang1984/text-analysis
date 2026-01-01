@@ -6,14 +6,16 @@ from typing import List, Set
 import numpy as np
 
 from src.config import AppConfig
+from src.logging_utils import log_info
 from src.pipeline.embedding import EmbeddingFactory
+from src.pipeline.pipeline import Source
 
 
 @dataclass(frozen=True)
 class SentenceItem:
     text: str
     comment_id: str
-    source: str  # "baseline" | "comparison"
+    source: Source  # "baseline" | "comparison"
 
 
 @dataclass
@@ -217,4 +219,11 @@ def cluster_sentences_greedy_threshold(
     items: List[SentenceItem],
     config: AppConfig
 ) -> List[ClusterInternal]:
+    log_info(
+        "clustering.greedy_threshold",
+        item_count=len(items),
+        similarity_threshold=config.cluster_similarity_threshold,
+        max_clusters=config.cluster_max_clusters,
+        embedding_provider=config.embedding_provider,
+    )
     return GreedyThresholdClusterer(config).cluster(items)

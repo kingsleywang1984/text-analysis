@@ -52,12 +52,13 @@ SentimentLabel = Literal["positive", "neutral", "negative"]
 class StandaloneCluster(BaseModel):
     """
     Standalone output cluster contract (strict):
-    - Must contain ONLY: title, sentiment, keyInsights
+    - Must contain ONLY: title, sentiment, sentences, keyInsights
     """
     model_config = ConfigDict(extra="forbid")
 
     title: str = Field(min_length=1)
     sentiment: SentimentLabel
+    # sentences: List[str] = Field(min_length=1)  # comment IDs (deduped)
     keyInsights: List[str] = Field(min_length=2, max_length=3)
 
 

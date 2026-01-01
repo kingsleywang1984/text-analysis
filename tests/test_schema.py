@@ -56,6 +56,7 @@ def test_standalone_response_schema_accepts_minimal_valid_shape():
             {
                 "title": "Example cluster title",
                 "sentiment": "neutral",
+                # "sentences": ["comment-1", "comment-2"],
                 "keyInsights": ["Insight 1", "Insight 2"],
             }
         ]
@@ -87,6 +88,7 @@ def test_cluster_keyinsights_must_be_2_to_3():
                 {
                     "title": "Bad cluster",
                     "sentiment": "negative",
+                    # "sentences": ["comment-1"],
                     "keyInsights": ["Only one"],  # invalid
                 }
             ]
@@ -99,6 +101,7 @@ def test_cluster_keyinsights_must_be_2_to_3():
                 {
                     "title": "Bad cluster",
                     "sentiment": "negative",
+                    # "sentences": ["comment-1"],
                     "keyInsights": ["1", "2", "3", "4"],  # invalid
                 }
             ]

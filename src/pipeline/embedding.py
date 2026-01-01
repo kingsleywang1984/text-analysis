@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Iterable, List, Protocol
+from typing import Any, Iterable, List, Protocol, cast
 
 import numpy as np
 import requests
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from src.config import AppConfig
-from src.logging_utils import log_info
+from src.logging_utils import log_info, log_warning
 
 
 def _log(event: str, **fields: Any) -> None:
@@ -48,6 +48,7 @@ class OpenAIEmbeddingProvider:
         if not texts:
             return np.zeros((0, 0), dtype=np.float32)
 
+        log_info("embedding.openai", embedding_provider="openai")
         base_url = (self.config.embedding_api_base_url or "https://api.openai.com").rstrip("/")
         endpoint = f"{base_url}/v1/embeddings"
         headers = {
@@ -79,13 +80,20 @@ class TfidfEmbeddingProvider:
         if not texts:
             return np.zeros((0, 0), dtype=np.float32)
 
+        log_info("embedding.tfidf", embedding_provider="tfidf")
         vectorizer = TfidfVectorizer(
             max_features=self.config.embedding_tfidf_max_features,
             ngram_range=(self.config.embedding_tfidf_ngram_min, self.config.embedding_tfidf_ngram_max),
         )
         try:
-            matrix = vectorizer.fit_transform(texts)
+            # sklearn's typing can be incomplete depending on the environment; we only rely on `.toarray()`.
+            matrix = cast(Any, vectorizer.fit_transform(texts))
         except ValueError:
+            # Typical: empty/stopword-only vocabulary after preprocessing.
+            log_warning(
+                "embedding.tfidf.empty_vocab",
+                text_count=len(texts),
+            )
             return np.zeros((len(texts), 0), dtype=np.float32)
 
         dense = matrix.toarray()

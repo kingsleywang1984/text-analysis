@@ -15,7 +15,7 @@ terraform {
     encrypt        = true
     # Use DynamoDB table for state locking (prevents concurrent modifications)
     dynamodb_table = "terraform-state-lock"
-    profile        = "kingsley-personal"
+    # profile        = "kingsley-personal"
   }
 }
 

@@ -44,7 +44,6 @@ def _build_logger() -> logging.Logger:
 
 _LOGGER = _build_logger()
 
-
 def log_info(event: str, **fields: Any) -> None:
     _LOGGER.info(event, extra={"log_extra": fields})
 

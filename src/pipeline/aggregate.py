@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import List
 
 from src.config import AppConfig
+from src.logging_utils import log_info
 from src.pipeline.clustering import ClusterInternal
 from src.pipeline.pipeline import ClusterReport, SemanticSentence, stable_dedupe_sorted
 from src.pipeline.sentiment import cluster_sentiment
@@ -21,6 +22,12 @@ class Aggregator:
         clusters: List[ClusterInternal],
         titles: List[str],
     ) -> List[ClusterReport]:
+        log_info(
+            "aggregate.build_reports",
+            cluster_count=len(clusters),
+            sentence_count=len(sentences),
+            representative_cap=int(self.config.llm_representative_sentences_per_cluster),
+        )
         """
         Convert sentence-level clusters to comment-ID-level reports with sentiment, representative texts, etc.
         

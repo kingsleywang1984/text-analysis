@@ -82,8 +82,9 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
     Route: POST /analyze
     """
     start = time.perf_counter()
-    log_info("handler.event_received", has_context=bool(context))
     method, path = _extract_method_path(event)
+    log_info("handler.event_received", has_context=bool(context))
+
     if method and path and not (method == "POST" and path.endswith("/analyze")):
         return _json_response(404, {"error": "Not Found"}).to_dict()
 

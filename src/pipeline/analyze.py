@@ -5,6 +5,7 @@ from typing import List, Optional
 
 from src.config import AppConfig
 from src.llm.client import LLMClient
+from src.logging_utils import log_info, log_warning
 from src.models.schemas import (
     AnalyzeRequest,
     AnalyzeResponseComparison,
@@ -238,7 +239,6 @@ class RequestAnalyzer:
             self.config.cluster_overflow_strategy == "OTHER"
             and len(clusters_raw) > self.config.cluster_max_clusters
         )
-
         # ========================================================================
         # STEP 6: Generate Deterministic Fallback Titles
         # ========================================================================
@@ -356,6 +356,7 @@ class RequestAnalyzer:
                     baseline_texts=list(report.baseline_representative_texts),
                     comparison_texts=list(report.comparison_representative_texts),
                 )
+                title_source = "fallback"
                 if self.llm is not None and (idx < int(self.config.llm_max_clusters)) and not is_other_cluster:
                     try:
                         title_label = self.llm.label_cluster(
@@ -366,8 +367,44 @@ class RequestAnalyzer:
                         )
                         validate_cluster_labeling_budget(title_label, self.config)
                         title = title_label.title
-                    except Exception:
-                        pass
+                        title_source = "llm"
+                    except Exception as e:
+                        cause = getattr(e, "__cause__", None) or getattr(e, "__context__", None)
+                        cause_type = type(cause).__name__ if cause is not None else None
+                        cause_msg = str(cause) if cause is not None else None
+                        status_code = None
+                        response_text_head = None
+                        resp = getattr(cause, "response", None) if cause is not None else None
+                        if resp is not None:
+                            status_code = getattr(resp, "status_code", None)
+                            try:
+                                txt = getattr(resp, "text", "")
+                                response_text_head = (txt[:500] + "…") if isinstance(txt, str) and len(txt) > 500 else txt
+                            except Exception:
+                                response_text_head = None
+                        log_warning(
+                            "llm.label_cluster.failed",
+                            mode="comparison",
+                            cluster_index=idx,
+                            is_other=is_other_cluster,
+                            error_type=type(e).__name__,
+                            error=str(e),
+                            llm_provider=self.config.llm_provider,
+                            llm_base_url=self.config.llm_base_url,
+                            llm_model=self.config.llm_model,
+                            cause_type=cause_type,
+                            cause=cause_msg,
+                            http_status=status_code,
+                            http_response_text_head=response_text_head,
+                        )
+                        # Circuit breaker: after one LLM failure, disable LLM for the rest of this request
+                        llm = None
+                        log_warning(
+                            "llm.disabled_for_request",
+                            reason="label_cluster_failed",
+                            mode="comparison",
+                            cluster_index=idx,
+                        )
 
                 # Step 9.4: Generate similarities and differences (deterministic fallback)
                 # Processing Logic:
@@ -382,6 +419,7 @@ class RequestAnalyzer:
                     baseline_texts=list(report.baseline_representative_texts),
                     comparison_texts=list(report.comparison_representative_texts),
                 )
+                simdiff_source = "fallback"
 
                 # Step 9.5: LLM enhancement for similarities and differences (optional)
                 # Processing Logic:
@@ -406,8 +444,53 @@ class RequestAnalyzer:
                         validate_comparison_budget(summary, self.config)
                         key_sim = summary.key_similarities
                         key_diff = summary.key_differences
-                    except Exception:
-                        pass
+                        simdiff_source = "llm"
+                    except Exception as e:
+                        cause = getattr(e, "__cause__", None) or getattr(e, "__context__", None)
+                        cause_type = type(cause).__name__ if cause is not None else None
+                        cause_msg = str(cause) if cause is not None else None
+                        status_code = None
+                        response_text_head = None
+                        resp = getattr(cause, "response", None) if cause is not None else None
+                        if resp is not None:
+                            status_code = getattr(resp, "status_code", None)
+                            try:
+                                txt = getattr(resp, "text", "")
+                                response_text_head = (txt[:500] + "…") if isinstance(txt, str) and len(txt) > 500 else txt
+                            except Exception:
+                                response_text_head = None
+                        log_warning(
+                            "llm.summarize_cluster_comparison.failed",
+                            mode="comparison",
+                            cluster_index=idx,
+                            is_other=is_other_cluster,
+                            error_type=type(e).__name__,
+                            error=str(e),
+                            llm_provider=self.config.llm_provider,
+                            llm_base_url=self.config.llm_base_url,
+                            llm_model=self.config.llm_model,
+                            cause_type=cause_type,
+                            cause=cause_msg,
+                            http_status=status_code,
+                            http_response_text_head=response_text_head,
+                        )
+                        llm = None
+                        log_warning(
+                            "llm.disabled_for_request",
+                            reason="summarize_cluster_comparison_failed",
+                            mode="comparison",
+                            cluster_index=idx,
+                        )
+
+                log_info(
+                    "analyze.step9.output_sources",
+                    mode="comparison",
+                    cluster_index=idx,
+                    is_other=is_other_cluster,
+                    title_source=title_source,
+                    similarities_source=simdiff_source,
+                    differences_source=simdiff_source,
+                )
 
                 # Step 9.6: Build ComparisonCluster output object
                 # Output Format: ComparisonCluster {
@@ -449,6 +532,8 @@ class RequestAnalyzer:
                     sentiment=sent,
                     texts=texts,
                 )
+                title_source = "fallback"
+                insights_source = "fallback"
 
                 # Step 9.2: LLM enhancement for title and insights (LLM-first strategy)
                 # Processing Logic:
@@ -464,20 +549,67 @@ class RequestAnalyzer:
                         validate_cluster_labeling_budget(labeling, self.config)
                         title = labeling.title
                         insights = labeling.key_insights
-                    except Exception:
+                        title_source = "llm"
+                        insights_source = "llm"
+                    except Exception as e:
                         # Any failure => fallback
-                        pass
+                        cause = getattr(e, "__cause__", None) or getattr(e, "__context__", None)
+                        cause_type = type(cause).__name__ if cause is not None else None
+                        cause_msg = str(cause) if cause is not None else None
+                        status_code = None
+                        response_text_head = None
+                        resp = getattr(cause, "response", None) if cause is not None else None
+                        if resp is not None:
+                            status_code = getattr(resp, "status_code", None)
+                            try:
+                                txt = getattr(resp, "text", "")
+                                response_text_head = (txt[:500] + "…") if isinstance(txt, str) and len(txt) > 500 else txt
+                            except Exception:
+                                response_text_head = None
+                        log_warning(
+                            "llm.label_cluster.failed",
+                            mode="standalone",
+                            cluster_index=idx,
+                            is_other=is_other_cluster,
+                            error_type=type(e).__name__,
+                            error=str(e),
+                            llm_provider=self.config.llm_provider,
+                            llm_base_url=self.config.llm_base_url,
+                            llm_model=self.config.llm_model,
+                            cause_type=cause_type,
+                            cause=cause_msg,
+                            http_status=status_code,
+                            http_response_text_head=response_text_head,
+                        )
+                        llm = None
+                        log_warning(
+                            "llm.disabled_for_request",
+                            reason="label_cluster_failed",
+                            mode="standalone",
+                            cluster_index=idx,
+                        )
+
+                log_info(
+                    "analyze.step9.output_sources",
+                    mode="standalone",
+                    cluster_index=idx,
+                    is_other=is_other_cluster,
+                    title_source=title_source,
+                    insights_source=insights_source,
+                )
 
                 # Step 9.3: Build StandaloneCluster output object
                 # Output Format: StandaloneCluster {
                 #   title: str,              # Cluster title
                 #   sentiment: SentimentLabel, # Sentiment label
+                #   sentences: List[str],     # Comment IDs (deduplicated)
                 #   keyInsights: List[str]    # Key insights list (2-3 items)
                 # }
                 clusters_out_standalone.append(
                     StandaloneCluster(
                         title=title,
                         sentiment=sent,
+                        # sentences=list(report.baseline_comment_ids),
                         keyInsights=insights,
                     )
                 )
